@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>SPARKS Royal Eats</title>
+<link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@500;700&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --primary: #d32f2f;
+    --secondary: #fbc02d;
+    --background: #f4f4f4;
+    --text: #212121;
+    --card-bg: #ffffff;
+    --accent: #ffeb3b;
+  }
+  * {
+    box-sizing: border-box;
+    margin: 0; padding: 0;
+  }
+  body {
+    font-family: 'Quicksand', sans-serif;
+    background: var(--background);
+    color: var(--text);
+    line-height: 1.6;
+  }
+
+  /* Navigation Bar */
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    background: var(--primary);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 2rem;
+    z-index: 1000;
+    box-shadow: 0 3px 8px rgba(0,0,0,0.25);
+  }
+  nav .logo {
+    font-size: 1.8rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+  }
+  nav .logo::after {
+    content: ' 👑';
+  }
+  nav ul {
+    list-style: none;
+    display: flex;
+    gap: 1.5rem;
+  }
+  nav ul li {
+    cursor: pointer;
+    font-weight: 600;
+    transition: color 0.3s;
+  }
+  nav ul li:hover {
+    color: var(--secondary);
+  }
+  nav .auth-buttons button {
+    background: transparent;
+    border: 2px solid white;
+    color: white;
+    padding: 0.3rem 0.9rem;
+    border-radius: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.3s, color 0.3s;
+  }
+  nav .auth-buttons button:hover {
+    background: var(--secondary);
+    color: var(--primary);
+    border-color: var(--secondary);
+  }
+
+  /* Dropdown auth panel */
+  #auth-panel {
+    position: fixed;
+    top: 56px; /* nav height approx */
+    left: 0; right: 0;
+    background: var(--card-bg);
+    max-width: 700px;
+    margin: 0 auto;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+    display: none;
+    z-index: 999;
+  }
+  #auth-panel.active {
+    display: flex;
+    justify-content: space-around;
+    gap: 2rem;
+  }
+  #auth-panel > div {
+    flex: 1;
+  }
+  #auth-panel h3 {
+    margin-bottom: 1rem;
+    color: var(--primary);
+  }
+
+  /* Login form */
+  #login-form input {
+    width: 100%;
+    padding: 0.6rem;
+    margin-bottom: 0.8rem;
+    border-radius: 10px;
+    border: 1px solid #ccc;
+    font-size: 1rem;
+  }
+  #login-form button {
+    width: 100%;
+    padding: 0.6rem;
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.3s;
+    font-size: 1rem;
+  }
+  #login-form button:hover {
+    background: #b71c1c;
+  }
+  #login-message {
+    margin-top: 0.4rem;
+    font-weight: 600;
+    color: var(--primary);
+  }
+
+  /* Signup form */
+  #signup-form {
+    position: relative;
+  }
+  #signup-form input[type="email"],
+  #signup-form input[type="password"] {
+    width: 100%;
+    padding: 0.6rem;
+    margin-bottom: 0.5rem;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    font-size: 1rem;
+  }
+  #signup-form input:focus {
+    border-color: var(--primary);
+    outline: none;
+  }
+  #togglePassword {
+    cursor: pointer;
+    font-size: 0.9rem;
+    color: var(--primary);
+    user-select: none;
+    display: inline-block;
+    margin-bottom: 0.5rem;
+  }
+  #signup-form button {
+    background: var(--primary);
+    color: white;
+    border: none;
+    padding: 0.7rem;
+    border-radius: 8px;
+    width: 100%;
+    font-size: 1rem;
+    cursor: pointer;
+    margin-top: 0.5rem;
+  }
+  #signup-form button:disabled {
+    background: #e57373;
+    cursor: not-allowed;
+  }
+  #passwordFeedback,
+  #confirmFeedback {
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+    color: #d32f2f;
+  }
+  #passwordFeedback.valid,
+  #confirmFeedback.valid {
+    color: green;
+  }
+
+  /* Strength meter */
+  .strength-meter {
+    height: 6px;
+    background: #e0e0e0;
+    border-radius: 3px;
+    margin-bottom: 0.5rem;
+    overflow: hidden;
+  }
+  .strength-meter-fill {
+    height: 100%;
+    width: 0;
+    background: red;
+    transition: width 0.3s ease;
+  }
+
+  /* Main content sections */
+  main {
+    margin-top: 90px; /* for nav & auth space */
+    max-width: 1100px;
+    margin-left: auto;
+    margin-right: auto;
+    padding: 1rem;
+  }
+  h2 {
+    font-size: 2rem;
+    color: var(--primary);
+    margin-bottom: 1rem;
+    border-bottom: 2px solid var(--secondary);
+    display: inline-block;
+  }
+  .menu-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 2rem;
+  }
+  .menu-item {
+    background: var(--card-bg);
+    border-radius: 20px;
+    box-shadow: 6px 6px 12px #d1d1d1, -6px -6px 12px #ffffff;
+    text-align: center;
+    padding: 1.2rem;
+    transition: transform 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .menu-item:hover {
+    transform: translateY(-8px);
+  }
+  .menu-item img {
+    width: 100%;
+    height: 180px;
+    object-fit: cover;
+    border-radius: 16px;
+    margin-bottom: 1rem;
+    box-shadow: 3px 3px 10px rgba(0,0,0,0.15);
+  }
+  .menu-item span {
+    font-weight: 700;
+    font-size: 1.3rem;
+    margin-bottom: 0.7rem;
+    color: var(--primary);
+  }
+  .menu-item button {
+    padding: 0.6rem 1.2rem;
+    background: var(--secondary);
+    color: #333;
+    border: none;
+    border-radius: 12px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background 0.3s;
+  }
+  .menu-item button:hover {
+    background: #ffe082;
+  }
+
+  /* Cart section */
+  #cart {
+    margin-top: 3rem;
+  }
+  #cart-items {
+    list-style: none;
+    padding: 0;
+  }
+  #cart-items li {
+    background: white;
+    padding: 0.8rem 1rem;
+    margin-bottom: 0.6rem;
+    border-radius: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 2px 2px 6px rgba(0,0,0,0.1);
+  }
+  #cart-items button {
+    background: var(--primary);
+    color: white;
+    border: none;
+    padding: 0.4rem 0.8rem;
+    border-radius: 8px;
+    cursor: pointer;
+  }
+
+  /* Welcome & logout */
+  #welcome-msg {
+    color: var(--secondary);
+    font-weight: 700;
+    font-size: 1.2rem;
+    margin-bottom: 1rem;
+  }
+  #logout-btn {
+    background: var(--primary);
+    border: none;
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 12px;
+    cursor: pointer;
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+  }
+  #logout-btn:hover {
+    background: #b71c1c;
+  }
+
+  /* Responsive */
+  @media (max-width: 800px) {
+    #auth-panel.active {
+      flex-direction: column;
+      max-width: 95vw;
+    }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="logo">SPARKS Royal Eats</div>
+  <ul>
+    <li id="nav-home">Home</li>
+    <li id="nav-menu">Menu</li>
+    <li id="nav-cart">Cart</li>
+  </ul>
+  <div class="auth-buttons">
+    <button id="show-login-btn">Login</button>
+    <button id="show-signup-btn">Sign Up</button>
+  </div>
+</nav>
+
+<!-- Auth panel -->
+<div id="auth-panel" aria-live="polite">
+  <!-- Login form -->
+  <div id="login-section" style="flex:1;">
+    <h3>Login</h3>
+    <form id="login-form" novalidate>
+      <input type="email" id="login-email" placeholder="Email" required />
+      <input type="password" id="login-password" placeholder="Password" required minlength="8" />
+      <button type="submit">Login</button>
+      <p id="login-message" aria-live="assertive"></p>
+    </form>
+  </div>
+
+  <!-- Signup form with password validation -->
+  <div id="signup-section" style="flex:1;">
+    <h3>Sign Up</h3>
+    <form id="signup-form" novalidate>
+      <input type="email" id="signup-email" placeholder="Email" required />
+      
+      <input type="password" id="signup-password" placeholder="Password" aria-describedby="passwordHelp" required />
+      <label id="togglePassword" for="signup-password">Show Password</label>
+      
+      <div class="strength-meter" aria-hidden="true">
+        <div class="strength-meter-fill"></div>
+      </div>
+      <p id="passwordFeedback" aria-live="polite"></p>
+      
+      <input type="password" id="signup-confirm-password" placeholder="Confirm Password" required />
+      <p id="confirmFeedback" aria-live="polite"></p>
+      
+      <button type="submit" id="signup-btn" disabled>Sign Up</button>
+    </form>
+  </div>
+</div>
+
+<main>
+  <section id="welcome-section" hidden>
+    <p id="welcome-msg"></p>
+    <button id="logout-btn">Logout</button>
+  </section>
+
+  <section id="menu-section">
+    <h2>Delicious South African Dishes</h2>
+    <div class="menu-grid" id="menu-grid">
+      <!-- Menu items will be inserted here by JavaScript -->
+    </div>
+  </section>
+
+  <section id="cart" hidden>
+    <h2>Your Cart</h2>
+    <ul id="cart-items"></ul>
+    <p id="cart-total"></p>
+  </section>
+</main>
+
+<script>
+  // Elements references
+  const authPanel = document.getElementById('auth-panel');
+  const loginSection = document.getElementById('login-section');
+  const signupSection = document.getElementById('signup-section');
+  const showLoginBtn = document.getElementById('show-login-btn');
+  const showSignupBtn = document.getElementById('show-signup-btn');
+  const loginForm = document.getElementById('login-form');
+  const signupForm = document.getElementById('signup-form');
+  const loginMessage = document.getElementById('login-message');
+  const signupBtn = document.getElementById('signup-btn');
+  const welcomeSection = document.getElementById('welcome-section');
+  const welcomeMsg = document.getElementById('welcome-msg');
+  const logoutBtn = document.getElementById('logout-btn');
+  const menuGrid = document.getElementById('menu-grid');
+  const cartSection = document.getElementById('cart');
+  const cartItemsList = document.getElementById('cart-items');
+  const cartTotal = document.getElementById('cart-total');
+
+  // Auth buttons handlers
+  showLoginBtn.addEventListener('click', () => {
+    authPanel.classList.add('active');
+    loginSection.style.display = 'block';
+    signupSection.style.display = 'none';
+  });
+  showSignupBtn.addEventListener('click', () => {
+    authPanel.classList.add('active');
+    signupSection.style.display = 'block';
+    loginSection.style.display = 'none';
+  });
+
+  // Close auth panel on successful login/signup or on outside click
+  document.addEventListener('click', (e) => {
+    if (!authPanel.contains(e.target) && !showLoginBtn.contains(e.target) && !showSignupBtn.contains(e.target)) {
+      authPanel.classList.remove('active');
+    }
+  });
+
+  // Show login by default on load
+  showLoginBtn.click();
+
+  // Password toggle for signup
+  const signupPassword = document.getElementById('signup-password');
+  const togglePasswordLabel = document.getElementById('togglePassword');
+  togglePasswordLabel.addEventListener('click', () => {
+    if (signupPassword.type === 'password') {
+      signupPassword.type = 'text';
+      togglePasswordLabel.textContent = 'Hide Password';
+    } else {
+      signupPassword.type = 'password';
+      togglePasswordLabel.textContent = 'Show Password';
+    }
+  });
+
+  // Password strength meter and validation for signup
+  const strengthMeterFill = document.querySelector('.strength-meter-fill');
+  const passwordFeedback = document.getElementById('passwordFeedback');
+  const confirmPassword = document.getElementById('signup-confirm-password');
+  const confirmFeedback = document.getElementById('confirmFeedback');
+
+  function checkPasswordStrength(password) {
+    let strength = 0;
+    if (password.length >= 8) strength++;
+    if (/[A-Z]/.test(password)) strength++;
+    if (/[0-9]/.test(password)) strength++;
+    if (/[^A-Za-z0-9]/.test(password)) strength++;
+
+    return strength;
+  }
+
+  function updateStrengthMeter() {
+    const pwd = signupPassword.value;
+    const strength = checkPasswordStrength(pwd);
+    let width = (strength / 4) * 100;
+    strengthMeterFill.style.width = width + '%';
+
+    if (strength === 0) {
+      strengthMeterFill.style.background = 'transparent';
+      passwordFeedback.textContent = '';
+      return false;
+    } else if (strength <= 1) {
+      strengthMeterFill.style.background = 'red';
+      passwordFeedback.textContent = 'Weak password';
+      passwordFeedback.classList.remove('valid');
+      return false;
+    } else if (strength === 2) {
+      strengthMeterFill.style.background = 'orange';
+      passwordFeedback.textContent = 'Moderate password';
+      passwordFeedback.classList.remove('valid');
+      return false;
+    } else if (strength === 3) {
+      strengthMeterFill.style.background = 'yellowgreen';
+      passwordFeedback.textContent = 'Strong password';
+      passwordFeedback.classList.add('valid');
+      return true;
+    } else if (strength === 4) {
+      strengthMeterFill.style.background = 'green';
+      passwordFeedback.textContent = 'Very strong password';
+      passwordFeedback.classList.add('valid');
+      return true;
+    }
+  }
+
+  function validateConfirmPassword() {
+    if (confirmPassword.value === signupPassword.value && confirmPassword.value.length > 0) {
+      confirmFeedback.textContent = 'Passwords match';
+      confirmFeedback.classList.add('valid');
+      return true;
+    } else {
+      confirmFeedback.textContent = 'Passwords do not match';
+      confirmFeedback.classList.remove('valid');
+      return false;
+    }
+  }
+
+  function updateSignupButton() {
+    const pwdValid = updateStrengthMeter();
+    const confirmValid = validateConfirmPassword();
+    signupBtn.disabled = !(pwdValid && confirmValid);
+  }
+
+  signupPassword.addEventListener('input', updateSignupButton);
+  confirmPassword.addEventListener('input', updateSignupButton);
+
+  // Signup form submission
+  signupForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    alert('Signup form submitted!\nEmail: ' + signupForm['signup-email'].value);
+    // Here you would add real signup logic, e.g., API call
+    signupForm.reset();
+    strengthMeterFill.style.width = '0';
+    passwordFeedback.textContent = '';
+    confirmFeedback.textContent = '';
+    signupBtn.disabled = true;
+  });
+
+  // Login form submission (dummy)
+  loginForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    loginMessage.textContent = 'Login successful! Welcome.';
+    welcomeMsg.textContent = `Welcome back, ${loginForm['login-email'].value}`;
+    authPanel.classList.remove('active');
+    welcomeSection.hidden = false;
+    cartSection.hidden = false;
+    showLoginBtn.style.display = 'none';
+    showSignupBtn.style.display = 'none';
+  });
+
+  logoutBtn.addEventListener('click', () => {
+    welcomeSection.hidden = true;
+    cartSection.hidden = true;
+    showLoginBtn.style.display = 'inline-block';
+    showSignupBtn.style.display = 'inline-block';
+    loginForm.reset();
+    signupForm.reset();
+  });
+
+  // Sample food menu items with AI-generated image URLs
+  const menuItems = [
+    {
+      id: 1,
+      name: 'Bunny Chow',
+      img: 'https://images.unsplash.com/photo-1601050690597-df0568f70950?w=600&auto=format&fit=crop&q=60',
+      price: 55
+    },
+    {
+      id: 2,
+      name: 'Boerewors Roll',
+      img: 'https://images.unsplash.com/photo-1559847844-5315695dadae?w=600&auto=format&fit=crop&q=60',
+      price: 35
+    },
+    {
+      id: 3,
+      name: 'Chakalaka',
+      img: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=600&auto=format&fit=crop&q=60',
+      price: 25
+    },
+    {
+      id: 4,
+      name: 'Pap and Sauce',
+      img: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600&auto=format&fit=crop&q=60',
+      price: 40
+    },
+    {
+      id: 5,
+      name: 'Melktert',
+      img: 'https://images.unsplash.com/photo-1563805042-7684c019e1cb?w=600&auto=format&fit=crop&q=60',
+      price: 20
+    },
+    {
+      id: 6,
+      name: 'Bobotie',
+      img: 'https://images.unsplash.com/photo-1601050690597-df0568f70950?w=600&auto=format&fit=crop&q=60',
+      price: 45
+    },
+    {
+      id: 7,
+      name: 'Koeksisters',
+      img: 'https://images.unsplash.com/photo-1563805042-7684c019e1cb?w=600&auto=format&fit=crop&q=60',
+      price: 15
+    },
+    {
+      id: 8,
+      name: 'Potjiekos',
+      img: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600&auto=format&fit=crop&q=60',
+      price: 65
+    }
+  ];
+
+  // Render menu items
+  function renderMenu() {
+    menuGrid.innerHTML = '';
+    menuItems.forEach(item => {
+      const div = document.createElement('div');
+      div.className = 'menu-item';
+      div.innerHTML = `
+        <img src="${item.img}" alt="${item.name}" />
+        <span>${item.name}</span>
+        <button data-id="${item.id}">Add to Cart (R${item.price})</button>
+      `;
+      menuGrid.appendChild(div);
+    });
+  }
+  renderMenu();
+
+  // Cart management
+  let cart = [];
+
+  menuGrid.addEventListener('click', e => {
+    if(e.target.tagName === 'BUTTON') {
+      const id = Number(e.target.getAttribute('data-id'));
+      const item = menuItems.find(i => i.id === id);
+      if(item) {
+        cart.push(item);
+        updateCartUI();
+      }
+    }
+  });
+
+  function updateCartUI() {
+    if(cart.length === 0) {
+      cartItemsList.innerHTML = '<li>Your cart is empty.</li>';
+      cartTotal.textContent = '';
+      return;
+    }
+    cartItemsList.innerHTML = '';
+    cart.forEach((item, index) => {
+      const li = document.createElement('li');
+      li.textContent = `${item.name} - R${item.price}`;
+      const removeBtn = document.createElement('button');
+      removeBtn.textContent = 'Remove';
+      removeBtn.addEventListener('click', () => {
+        cart.splice(index,1);
+        updateCartUI();
+      });
+      li.appendChild(removeBtn);
+      cartItemsList.appendChild(li);
+    });
+    const total = cart.reduce((sum,i) => sum + i.price, 0);
+    cartTotal.textContent = `Total: R${total}`;
+  }
+</script>
+
+</body>
+</html>
